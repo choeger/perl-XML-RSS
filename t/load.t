@@ -9,7 +9,7 @@ BEGIN {
     find(sub { push @files, $File::Find::name if $_ =~ m/\.pm$/;}, ($lib));
 
     @classes = map { my $x = $_;
-        $x =~ s|^blib/lib/||;
+        $x =~ s|\A\Q${lib}\E/?||ms;
         $x =~ s|/|::|g;
         $x =~ s|\.pm$||;
         $x;
