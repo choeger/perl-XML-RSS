@@ -13,19 +13,19 @@ use XML::RSS ();
 
 # Media RSS output constants
 use constant {
+    MEDIA_ATTR_ELEMENTS => [qw(height url width)],
     MEDIA_CONTENT_ATTRS => [qw(bitrate duration height type url width)],
-    MEDIA_NESTED_ELEMENTS => [qw(title description thumbnail credit category keywords rating copyright text hash player restriction)],
-    MEDIA_SIMPLE_TEXT_ELEMENTS => [qw(title keywords rating copyright)],
-    MEDIA_SELF_CLOSING_ELEMENTS => [qw(thumbnail player)],
-    MEDIA_ATTR_ELEMENTS => [qw(url width height)],
     MEDIA_ELEMENT_ATTRS => {
-        description => ['type'],
-        credit => ['role'], 
         category => ['scheme'],
-        text => [qw(type lang)],
+        credit => ['role'], 
+        description => ['type'],
         hash => ['algo'],
-        restriction => [qw(relationship type)]
+        restriction => [qw(relationship type)],
+        text => [qw(lang type)]
     },
+    MEDIA_NESTED_ELEMENTS => [qw(category copyright credit description hash keywords player rating restriction text thumbnail title)],
+    MEDIA_SELF_CLOSING_ELEMENTS => [qw(player thumbnail)],
+    MEDIA_SIMPLE_TEXT_ELEMENTS => [qw(copyright keywords rating title)],
 };
 
 sub new {
@@ -754,7 +754,7 @@ sub _out_single_media_group {
     
     # Output as container with nested elements
     my $prefix = $self->_get_media_prefix();
-    $self->_out("<$prefix:group>\n");
+    $self->_out("<${prefix}:group>\n");
     
     # Output nested elements using helper method
     $self->_out_media_elements_collection($group);
@@ -764,7 +764,7 @@ sub _out_single_media_group {
         $self->_process_media_collection($group->{content}, '_out_single_media_content');
     }
     
-    $self->_out("</$prefix:group>\n");
+    $self->_out("</${prefix}:group>\n");
 }
 
 sub _out_single_media_content {
@@ -791,15 +791,15 @@ sub _out_single_media_content {
     my $prefix = $self->_get_media_prefix();
     if ($has_nested) {
         # Output as container with nested elements
-        $self->_out("<$prefix:content" . (@attrs ? " " . join(" ", @attrs) : "") . ">\n");
+        $self->_out("<${prefix}:content" . (@attrs ? " " . join(" ", @attrs) : "") . ">\n");
         
         # Output nested elements using helper method
         $self->_out_media_elements_collection($content);
         
-        $self->_out("</$prefix:content>\n");
+        $self->_out("</${prefix}:content>\n");
     } else {
         # Output as self-closing tag
-        $self->_out("<$prefix:content" . (@attrs ? " " . join(" ", @attrs) : "") . "/>\n");
+        $self->_out("<${prefix}:content" . (@attrs ? " " . join(" ", @attrs) : "") . "/>\n");
     }
 }
 
@@ -815,7 +815,7 @@ sub _out_media_elements_collection {
         
         if (grep { $_ eq $elem_name } @{MEDIA_SIMPLE_TEXT_ELEMENTS()}) {
             # Simple text elements
-            $self->_out("<$prefix:$elem_name>" . $self->_encode($value) . "</$prefix:$elem_name>\n");
+            $self->_out("<${prefix}:${elem_name}>" . $self->_encode($value) . "</${prefix}:${elem_name}>\n");
         }
         elsif (grep { $_ eq $elem_name } @{MEDIA_SELF_CLOSING_ELEMENTS()}) {
             # Self-closing elements with attributes
@@ -827,7 +827,7 @@ sub _out_media_elements_collection {
                         push @attrs, qq{$attr="} . $self->_encode($value->{$attr}) . qq{"};
                     }
                 }
-                $self->_out("<$prefix:$elem_name" . (@attrs ? " " . join(" ", @attrs) : "") . "/>\n");
+                $self->_out("<${prefix}:${elem_name}" . (@attrs ? " " . join(" ", @attrs) : "") . "/>\n");
             }
         }
         else {
@@ -844,9 +844,9 @@ sub _out_media_elements_collection {
                     }
                 }
                 my $element_content = $value->{content} || "";
-                $self->_out("<$prefix:$elem_name$attrs>" . $self->_encode($element_content) . "</$prefix:$elem_name>\n");
+                $self->_out("<${prefix}:${elem_name}${attrs}>" . $self->_encode($element_content) . "</${prefix}:${elem_name}>\n");
             } else {
-                $self->_out("<$prefix:$elem_name>" . $self->_encode($value) . "</$prefix:$elem_name>\n");
+                $self->_out("<${prefix}:${elem_name}>" . $self->_encode($value) . "</${prefix}:${elem_name}>\n");
             }
         }
     }
